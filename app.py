@@ -2,7 +2,8 @@ import cv2
 import time
 import tkinter
 import numpy as np
-import HandTracking as htm
+# import HandTracking as htm
+import mediapipe as mp
 import pynput.mouse as Mouse
 import pynput.keyboard as Keyboard
 
@@ -35,7 +36,10 @@ cap.set(4, hCam)
 
 # Hand Detector Module
 # 50% Confidence hand detected
-detector = htm.handDetector(detectionCon=0.5)
+mpHands = mp.solutions.hands
+hands = mpHands.Hands(static_image_mode= False, max_num_hands= 2, min_detection_confidence= 0.5, min_tracking_confidence= 0.5)
+mpDraw = mp.solutions.drawing_utils
+results=None
 
 # Initialise binary variables
 is_present = 0
@@ -335,7 +339,37 @@ def erase_draw(lmList):
         keyboard.release('e')
         erased = 1
 
+# Find Hands
+def findHands(img, draw=True):
+    global hands, mpHands, results
+    imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    results = hands.process(imgRGB)
+    # print(results.multi_hand_landmarks)
+    if results.multi_hand_landmarks:
+        for handLms in results.multi_hand_landmarks:
+            if draw:
+                self.mpDraw.draw_landmarks(img, handLms,
+                                           mpHands.HAND_CONNECTIONS)
+    return img
 
+
+# Hands Position
+def findPosition(img, handNo=0, draw=True):
+    global myHand, results
+        lmList = []
+        if results.multi_hand_landmarks:
+            myHand = results.multi_hand_landmarks[handNo]
+            for id, lm in enumerate(myHand.landmark):
+                # print(id, lm)
+                h, w, c = img.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                # print(id, cx, cy)
+                lmList.append([id, cx, cy])
+                if draw:
+                    cv2.circle(img, (cx, cy), 7, (255, 0, 255), cv2.FILLED)
+        return lmList
+    
+    
 # Main
 def generate_frames():
     global txt_time, txt, disp_time, disp
@@ -344,8 +378,8 @@ def generate_frames():
         if not success:
             break
         img = cv2.flip(img, 1)
-        img = detector.findHands(img)
-        lmList = detector.findPosition(img, draw=False)
+        img = findHands(img)
+        lmList = findPosition(img, draw=False)
         txt = 0
         txt_time = txt_time + 1
 
