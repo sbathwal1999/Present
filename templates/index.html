@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv=""X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content ="width=device-width, initial-scale=1.0">
+    <title>CV</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+          <h3 class="mt-5">Live Streaming</h3>
+          <video id="video" width="480" height="360" hidden></video>
+          <img id="img" src="{{ url_for('video') }}" height = "100%">
+        <div class="col-lg-8 offset-lg-2">
+          <button
+            id="btnPip"
+            style="display: none"
+            type="button"
+            class="button"
+          >
+            Enter Picture-in-Picture
+          </button>
+          <button
+            id="btn_2"
+            type="button"
+            class="button"
+          >
+           Share Screen
+          </button>
+          <button
+            id="btn_3"
+            type="button"
+            class="button"
+          >Full Screen</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      var videoElement = document.getElementById("video");
+      var imgElement = document.getElementById("img");
+      const btn = document.getElementById("btnPip");
+      const btn_2 = document.getElementById("btn_2");
+      const btn_3 = document.getElementById("btn_3");
+
+
+
+      async function videoStream(){
+        try{
+          const stream = await navigator.mediaDevices.getDisplayMedia();
+          videoElement.srcObject = stream;
+          videoElement.onloadedmetadata = () => {
+            videoElement.play()
+          }
+        }
+        catch(error){
+          console.log('error')
+        }
+      }
+
+        /* When the openFullscreen() function is executed, open the video in fullscreen.
+        Note that we must include prefixes for different browsers, as they don't support the requestFullscreen method yet */
+        function openFullscreen() {
+          if (imgElement.requestFullscreen) {
+            imgElement.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) { /* Safari */
+            imgElement.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) { /* IE11 */
+            imgElement.msRequestFullscreen();
+          }
+        }
+
+        /* Close fullscreen */
+        function closeFullscreen() {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+          }
+        }
+      if ("pictureInPictureEnabled" in document) {
+        btn.style.display = null;
+
+        btn.addEventListener("click", async() => {
+            btn.disabled = true;
+            await videoElement.requestPictureInPicture().catch((err) => {
+            console.log(err);
+          });
+          btn.disabled = false;
+        });
+      }
+
+      btn_2.addEventListener("click", async() => {
+        videoStream()       
+          });
+      btn_3.addEventListener("click", async() => {
+        openFullscreen()       
+          });
+    </script>
+  </body>
+</html>
