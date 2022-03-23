@@ -37,9 +37,10 @@ cap.set(4, hCam)
 # Hand Detector Module
 # 50% Confidence hand detected
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(static_image_mode= False, max_num_hands= 2, min_detection_confidence= 0.5, min_tracking_confidence= 0.5)
+hands = mpHands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5,
+                      min_tracking_confidence=0.5)
 mpDraw = mp.solutions.drawing_utils
-results=None
+results = None
 
 # Initialise binary variables
 is_present = 0
@@ -60,6 +61,7 @@ disp_time = 0
 # Initialise lists
 present_distances = []
 tipIds = [4, 8, 12, 16, 20]
+lmList = []
 
 # String
 txt = 0
@@ -339,16 +341,17 @@ def erase_draw(lmList):
         keyboard.release('e')
         erased = 1
 
+
 # Find Hands
 def findHands(img, draw=True):
-    global hands, mpHands, results
+    global hands, mpHands, results, mpDraw
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     results = hands.process(imgRGB)
     # print(results.multi_hand_landmarks)
     if results.multi_hand_landmarks:
         for handLms in results.multi_hand_landmarks:
             if draw:
-                self.mpDraw.draw_landmarks(img, handLms,
+                mpDraw.draw_landmarks(img, handLms,
                                            mpHands.HAND_CONNECTIONS)
     return img
 
@@ -356,20 +359,20 @@ def findHands(img, draw=True):
 # Hands Position
 def findPosition(img, handNo=0, draw=True):
     global myHand, results
-        lmList = []
-        if results.multi_hand_landmarks:
-            myHand = results.multi_hand_landmarks[handNo]
-            for id, lm in enumerate(myHand.landmark):
-                # print(id, lm)
-                h, w, c = img.shape
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                # print(id, cx, cy)
-                lmList.append([id, cx, cy])
-                if draw:
-                    cv2.circle(img, (cx, cy), 7, (255, 0, 255), cv2.FILLED)
-        return lmList
-    
-    
+    lmList = []
+    if results.multi_hand_landmarks:
+        myHand = results.multi_hand_landmarks[handNo]
+        for id, lm in enumerate(myHand.landmark):
+            # print(id, lm)
+            h, w, c = img.shape
+            cx, cy = int(lm.x * w), int(lm.y * h)
+            # print(id, cx, cy)
+            lmList.append([id, cx, cy])
+            if draw:
+                cv2.circle(img, (cx, cy), 7, (255, 0, 255), cv2.FILLED)
+    return lmList
+
+
 # Main
 def generate_frames():
     global txt_time, txt, disp_time, disp
@@ -414,9 +417,11 @@ def generate_frames():
 def index():
     return render_template('index.html')
 
+
 @app.route('/video')
 def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     app.run(debug=True)
